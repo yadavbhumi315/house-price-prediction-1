@@ -3,22 +3,25 @@ from xgboost import XGBRegressor
 import pickle
 import os
 
-# Ensure model folder exists
+# ---------------- CREATE MODEL FOLDER ----------------
 os.makedirs("model", exist_ok=True)
 
-# Load dataset
+# ---------------- LOAD DATA ----------------
 df = pd.read_csv("data/train.csv")
 
-# Select features
+# ---------------- SELECT FEATURES ----------------
 X = df[['OverallQual', 'GrLivArea', 'GarageCars']]
 y = df['SalePrice']
 
-# Train model
+# ---------------- TRAIN MODEL ----------------
 model = XGBRegressor()
 model.fit(X, y)
 
-# Save model
-with open("model/model.pkl", "wb") as f:
+# ---------------- SAVE MODEL ----------------
+model_path = os.path.join("model", "model.pkl")
+
+with open(model_path, "wb") as f:
     pickle.dump(model, f)
 
+# ---------------- SUCCESS MESSAGE ----------------
 print("✅ Model trained and saved successfully!")
