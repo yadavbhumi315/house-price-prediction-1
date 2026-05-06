@@ -69,7 +69,7 @@ try:
         st.error("❌ Model NOT FOUND")
         st.stop()
 
-    model = pickle.load(open(model_path, "rb"))
+    model = pickle.load(open("model.pkl", "rb"))
     st.success("✅ Model Loaded Successfully")
 
 except Exception as e:
