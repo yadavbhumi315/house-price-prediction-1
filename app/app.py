@@ -54,16 +54,9 @@ h1, h2, h3, h4, h5, h6, p, label {
 # ---------------- LOAD MODEL ----------------
 import os
 
+# ---------------- LOAD MODEL ----------------
 try:
-    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    model_path = os.path.join(BASE_DIR, "model.pkl")
-
-    if not os.path.exists(model_path):
-        st.error(f"❌ Model not found at: {model_path}")
-        st.stop()
-
-    model = pickle.load(open(model_path, "rb"))
-
+    model = pickle.load(open("model/model.pkl", "rb"))
 except Exception as e:
     st.error(f"❌ Model not loading: {e}")
     st.stop()
