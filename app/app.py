@@ -53,7 +53,9 @@ h1, h2, h3, h4, h5, h6, p, label {
 
 # ---------------- LOAD MODEL ----------------
 try:
-    model = pickle.load(open("model.pkl", "rb"))
+    import os
+model_path = os.path.join(os.path.dirname(__file__), "..", "model.pkl")
+model = pickle.load(open(model_path, "rb"))
 except:
     st.error("❌ Model not loading. Retrain model.")
     st.stop()
