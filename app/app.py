@@ -52,12 +52,20 @@ h1, h2, h3, h4, h5, h6, p, label {
 """, unsafe_allow_html=True)
 
 # ---------------- LOAD MODEL ----------------
+import os
+
 try:
-    import os
-model_path = os.path.join(os.path.dirname(__file__), "..", "model.pkl")
-model = pickle.load(open(model_path, "rb"))
-except:
-    st.error("❌ Model not loading. Retrain model.")
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    model_path = os.path.join(BASE_DIR, "model.pkl")
+
+    if not os.path.exists(model_path):
+        st.error(f"❌ Model not found at: {model_path}")
+        st.stop()
+
+    model = pickle.load(open(model_path, "rb"))
+
+except Exception as e:
+    st.error(f"❌ Model not loading: {e}")
     st.stop()
 
 # ---------------- LOAD DATA ----------------
