@@ -54,13 +54,23 @@ h1, h2, h3, h4, h5, h6, p, label {
 # ---------------- LOAD MODEL ----------------
 import os
 
-# ---------------- LOAD MODEL ----------------
 try:
-    model = pickle.load(open("model/model.pkl", "rb"))
-except Exception as e:
-    st.error(f"❌ Model not loading: {e}")
-    st.stop()
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    model_path = os.path.join(BASE_DIR, "model", "model.pkl")
 
+    st.write("🔍 Looking for model at:", model_path)  # DEBUG
+
+    if not os.path.exists(model_path):
+        st.error(f"❌ Model NOT found at: {model_path}")
+        st.write("📂 Files in BASE_DIR:", os.listdir(BASE_DIR))
+        st.stop()
+
+    model = pickle.load(open(model_path, "rb"))
+    st.success("✅ Model loaded successfully!")
+
+except Exception as e:
+    st.error(f"❌ Model loading error: {e}")
+    st.stop()
 # ---------------- LOAD DATA ----------------
 df = pd.read_csv("data/train.csv")
 
