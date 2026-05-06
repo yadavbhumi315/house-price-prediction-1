@@ -53,7 +53,7 @@ h1, h2, h3, h4, h5, h6, p, label {
 
 # ---------------- LOAD MODEL ----------------
 try:
-    model = pickle.load(open("model/model.pkl", "rb"))
+    model = pickle.load(open("model.pkl", "rb"))
 except:
     st.error("❌ Model not loading. Retrain model.")
     st.stop()
