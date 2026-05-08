@@ -52,15 +52,19 @@ h1, h2, h3, h4, h5, h6, p, label {
 """, unsafe_allow_html=True)
 
 # ---------------- LOAD MODEL ----------------
+import os
 import pickle
 import streamlit as st
 
-# Load model
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+model_path = os.path.join(BASE_DIR, "model.pkl")
+
 try:
-    model = pickle.load(open("model.pkl", "rb"))
+    model = pickle.load(open(model_path, "rb"))
     st.success("✅ Model loaded successfully!")
 except Exception as e:
-    st.error(f"❌ Model not found: {e}")
+    st.error(f"❌ Model not found! {e}")
     st.stop()
 
 # ---------------- INPUT ----------------
