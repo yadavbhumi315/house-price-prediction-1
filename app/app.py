@@ -52,39 +52,16 @@ h1, h2, h3, h4, h5, h6, p, label {
 """, unsafe_allow_html=True)
 
 # ---------------- LOAD MODEL ----------------
-import os
 import pickle
 import streamlit as st
 
+# Load model
 try:
-    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    
-    st.write("📂 BASE_DIR:", BASE_DIR)  # debug
-    st.write("📁 Files in root:", os.listdir(BASE_DIR))  # debug
-    
-    model_path = os.path.join(BASE_DIR, "model", "model.pkl")
-    st.write("🔍 Model path:", model_path)  # debug
-
-    if not os.path.exists(model_path):
-        st.error("❌ Model NOT FOUND")
-        st.stop()
-
     model = pickle.load(open("model.pkl", "rb"))
-    st.success("✅ Model Loaded Successfully")
-
+    st.success("✅ Model loaded successfully!")
 except Exception as e:
-    st.error(f"❌ Error: {e}")
+    st.error(f"❌ Model not found: {e}")
     st.stop()
-# ---------------- LOAD DATA ----------------
-df = pd.read_csv("data/train.csv")
-
-if 'lat' not in df.columns:
-    df['lat'] = np.random.uniform(40, 42, len(df))
-    df['lon'] = np.random.uniform(-94, -92, len(df))
-
-# ---------------- TITLE ----------------
-st.markdown("<h1>🏡 AI Real Estate Investment Advisor</h1>", unsafe_allow_html=True)
-st.success("✨ Predict • Analyze • Decide")
 
 # ---------------- INPUT ----------------
 col1, col2 = st.columns(2)
