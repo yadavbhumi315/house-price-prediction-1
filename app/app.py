@@ -65,8 +65,6 @@ if not os.path.exists(model_path):
     st.stop()
 
 model = pickle.load(open(model_path, "rb"))
-model = pickle.load(open(model_path, "rb"))
-
 # ---------------- LOAD DATA ----------------
 df = pd.read_csv("train.csv")
 
