@@ -56,17 +56,23 @@ import os
 import pickle
 import streamlit as st
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-model_path = os.path.join(BASE_DIR, "model.pkl")
+model_path = os.path.join(BASE_DIR, "model", "model.pkl")
 
-try:
-    model = pickle.load(open(model_path, "rb"))
-    st.success("✅ Model loaded successfully!")
-except Exception as e:
-    st.error(f"❌ Model not found! {e}")
+if not os.path.exists(model_path):
+    st.error(f"Model not found! {model_path}")
     st.stop()
 
+model = pickle.load(open(model_path, "rb"))
+model = pickle.load(open(model_path, "rb"))
+
+# ---------------- LOAD DATA ----------------
+df = pd.read_csv("train.csv")
+
+if 'lat' not in df.columns:
+    df['lat'] = np.random.uniform(40, 42, len(df))
+    df['lon'] = np.random.uniform(-94, -92, len(df))
 # ---------------- INPUT ----------------
 col1, col2 = st.columns(2)
 
