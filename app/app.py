@@ -65,6 +65,10 @@ if not os.path.exists(model_path):
     st.stop()
 
 model = pickle.load(open(model_path, "rb"))
+# ---------------- LOAD DATASET ----------------
+data_path = os.path.join(BASE_DIR, "..", "train.csv")
+
+df = pd.read_csv(data_path)
 # ---------------- LOAD DATA ----------------
 df = pd.read_csv("train.csv")
 
@@ -92,7 +96,7 @@ st_folium(m, width=600, height=400, returned_objects=[])
 # ---------------- CHART ----------------
 st.subheader("📊 Market Analysis")
 fig = px.scatter(df, x="GrLivArea", y="SalePrice")
-st.plotly_chart(fig, width='stretch')
+st.plotly_chart(fig, use_container_width=True)
 
 # ---------------- HEATMAP ----------------
 st.subheader("🌡️ Price Heatmap")
@@ -105,8 +109,7 @@ def create_heatmap(data):
 
 heat_data = df[['lat','lon','SalePrice']].dropna().values.tolist()
 heat_map = create_heatmap(heat_data)
-st_folium(heat_map, width=600, height=400, returned_objects=[])
-
+st_folium(heat_map, width="100%", height=400, returned_objects=[])
 # ---------------- PREDICTION ----------------
 if st.button("🔮 Predict Price"):
 
