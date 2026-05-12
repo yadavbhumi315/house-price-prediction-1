@@ -7,6 +7,7 @@ from streamlit_folium import st_folium
 from folium.plugins import HeatMap
 import plotly.express as px
 import time
+import os
 
 # ---------------- PAGE CONFIG ----------------
 st.set_page_config(page_title="AI Real Estate Advisor", layout="wide")
@@ -17,15 +18,18 @@ st.markdown("""
 [data-testid="stAppViewContainer"] {
     background: linear-gradient(135deg, #667eea, #764ba2);
 }
+
 .block-container {
     background: rgba(255,255,255,0.95);
     padding: 2rem;
     border-radius: 20px;
 }
+
 h1, h2, h3, h4, h5, h6, p, label {
     color: black !important;
     font-weight: bold;
 }
+
 .stButton>button {
     background: linear-gradient(to right, #ff416c, #ff4b2b);
     color: white;
@@ -33,7 +37,9 @@ h1, h2, h3, h4, h5, h6, p, label {
     height: 3em;
     width: 100%;
     font-size: 18px;
+    border: none;
 }
+
 .kpi {
     background: white;
     padding: 20px;
@@ -44,6 +50,7 @@ h1, h2, h3, h4, h5, h6, p, label {
     color: black !important;
     font-weight: bold;
 }
+
 .kpi small {
     color: #555 !important;
     font-size: 14px;
@@ -51,30 +58,31 @@ h1, h2, h3, h4, h5, h6, p, label {
 </style>
 """, unsafe_allow_html=True)
 
+# ---------------- BASE DIRECTORY ----------------
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 # ---------------- LOAD MODEL ----------------
-import os
-import pickle
-import streamlit as st
-
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-model_path = os.path.join(BASE_DIR, "model", "model.pkl")
+model_path = os.path.join(BASE_DIR, "..", "model", "model.pkl")
 
 if not os.path.exists(model_path):
     st.error(f"Model not found! {model_path}")
     st.stop()
 
-model = pickle.load(open(model_path, "rb"))
+with open(model_path, "rb") as file:
+    model = pickle.load(file)
+
 # ---------------- LOAD DATASET ----------------
-data_path = os.path.join(os.path.dirname(BASE_DIR), "train.csv")
+data_path = os.path.join(BASE_DIR, "..", "train.csv")
+
+if not os.path.exists(data_path):
+    st.error(f"Dataset not found! {data_path}")
+    st.stop()
 
 df = pd.read_csv(data_path)
-# ---------------- LOAD DATA ----------------
-df = pd.read_csv("train.csv")
 
-if 'lat' not in df.columns:
-    df['lat'] = np.random.uniform(40, 42, len(df))
-    df['lon'] = np.random.uniform(-94, -92, len(df))
+# ---------------- TITLE ----------------
+st.title("🏡 AI Real Estate Advisor")
+
 # ---------------- INPUT ----------------
 col1, col2 = st.columns(2)
 
@@ -89,13 +97,23 @@ with col2:
 
 # ---------------- MAP ----------------
 st.subheader("📍 Location")
+
 m = folium.Map(location=[lat, lon], zoom_start=12)
 folium.Marker([lat, lon]).add_to(m)
-st_folium(m, width=600, height=400, returned_objects=[])
+
+st_folium(m, width="100%", height=400, returned_objects=[])
 
 # ---------------- CHART ----------------
 st.subheader("📊 Market Analysis")
-fig = px.scatter(df, x="GrLivArea", y="SalePrice")
+
+fig = px.scatter(
+    df,
+    x="GrLivArea",
+    y="SalePrice",
+    color="OverallQual",
+    title="Area vs Sale Price"
+)
+
 st.plotly_chart(fig, use_container_width=True)
 
 # ---------------- HEATMAP ----------------
@@ -107,9 +125,19 @@ def create_heatmap(data):
     HeatMap(data, radius=8).add_to(base_map)
     return base_map
 
-heat_data = df[['lat','lon','SalePrice']].dropna().values.tolist()
+# Create fake lat/lon if dataset doesn't contain them
+if 'lat' not in df.columns:
+    df['lat'] = np.random.uniform(40.5, 41.5, len(df))
+
+if 'lon' not in df.columns:
+    df['lon'] = np.random.uniform(-93.5, -92.5, len(df))
+
+heat_data = df[['lat', 'lon', 'SalePrice']].dropna().values.tolist()
+
 heat_map = create_heatmap(heat_data)
+
 st_folium(heat_map, width="100%", height=400, returned_objects=[])
+
 # ---------------- PREDICTION ----------------
 if st.button("🔮 Predict Price"):
 
@@ -117,38 +145,77 @@ if st.button("🔮 Predict Price"):
         time.sleep(1)
 
         try:
-            input_data = np.array([[overall_qual, gr_liv_area, garage_cars]])
+            input_data = np.array([
+                [overall_qual, gr_liv_area, garage_cars]
+            ])
+
             prediction = model.predict(input_data)
+
             price = float(prediction[0])
 
             st.success(f"💰 Estimated Price: ₹ {price:,.0f}")
 
             # ---------------- KPI ----------------
             st.subheader("📊 Key Insights")
+
             c1, c2, c3 = st.columns(3)
 
-            c1.markdown(f"<div class='kpi'><small>💰 Price</small><br>₹ {price:,.0f}</div>", unsafe_allow_html=True)
-            c2.markdown(f"<div class='kpi'><small>🏠 Quality</small><br>{overall_qual}/10</div>", unsafe_allow_html=True)
-            c3.markdown(f"<div class='kpi'><small>📐 Area</small><br>{gr_liv_area} sq ft</div>", unsafe_allow_html=True)
+            c1.markdown(
+                f"""
+                <div class='kpi'>
+                <small>💰 Price</small><br>
+                ₹ {price:,.0f}
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+
+            c2.markdown(
+                f"""
+                <div class='kpi'>
+                <small>🏠 Quality</small><br>
+                {overall_qual}/10
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+
+            c3.markdown(
+                f"""
+                <div class='kpi'>
+                <small>📐 Area</small><br>
+                {gr_liv_area} sq ft
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
 
             # ---------------- SMART REPORT ----------------
             st.subheader("📄 Smart Property Report")
+
             price_per_sqft = price / gr_liv_area
 
             st.markdown(f"""
-            - 💰 Price: ₹ {price:,.0f}  
-            - 📐 Price/sqft: ₹ {price_per_sqft:,.2f}  
-            - ⭐ Quality: {overall_qual}/10  
+            - 💰 Price: ₹ {price:,.0f}
+            - 📐 Price/sqft: ₹ {price_per_sqft:,.2f}
+            - ⭐ Quality: {overall_qual}/10
             """)
 
             # ---------------- LOCATION SCORE ----------------
             st.subheader("📍 Location Score")
-            score = max(0, 100 - (abs(lat-41)*50 + abs(lon+93)*50))
-            st.progress(score/100)
+
+            score = max(
+                0,
+                100 - (abs(lat - 41) * 50 + abs(lon + 93) * 50)
+            )
+
+            st.progress(score / 100)
+
             st.write(f"Score: {int(score)}/100")
 
             # ---------------- PRICE COMPARISON ----------------
             st.subheader("📊 Price Comparison")
+
             avg_price = df['SalePrice'].mean()
 
             if price > avg_price:
@@ -161,14 +228,29 @@ if st.button("🔮 Predict Price"):
 
             if price < avg_price and overall_qual >= 6:
                 st.success("Great deal! Good quality at lower price.")
+
             elif price > avg_price and overall_qual < 5:
                 st.error("Overpriced for its quality.")
+
             else:
                 st.info("Balanced property.")
 
-            # ---------------- DOWNLOAD ----------------
-            report = f"Price: {price}, Area: {gr_liv_area}, Quality: {overall_qual}"
-            st.download_button("📥 Download Report", report, file_name="report.txt")
+            # ---------------- DOWNLOAD REPORT ----------------
+            report = f"""
+Property Report
+
+Price: ₹ {price:,.0f}
+Area: {gr_liv_area} sq ft
+Quality: {overall_qual}/10
+Garage: {garage_cars}
+Location Score: {int(score)}/100
+"""
+
+            st.download_button(
+                "📥 Download Report",
+                report,
+                file_name="property_report.txt"
+            )
 
         except Exception as e:
             st.error(f"❌ Prediction failed: {e}")
@@ -179,11 +261,24 @@ st.subheader("🔍 Explore Properties")
 min_price = int(df['SalePrice'].min())
 max_price = int(df['SalePrice'].max())
 
-price_range = st.slider("Select Price Range", min_price, max_price, (min_price, max_price))
-filtered = df[(df['SalePrice'] >= price_range[0]) & (df['SalePrice'] <= price_range[1])]
+price_range = st.slider(
+    "Select Price Range",
+    min_price,
+    max_price,
+    (min_price, max_price)
+)
 
-st.dataframe(filtered.head(20))
+filtered = df[
+    (df['SalePrice'] >= price_range[0]) &
+    (df['SalePrice'] <= price_range[1])
+]
+
+st.dataframe(filtered.head(20), use_container_width=True)
 
 # ---------------- FOOTER ----------------
 st.markdown("---")
-st.markdown("<center>🚀 Final Year AI Project - Production Ready</center>", unsafe_allow_html=True)
+
+st.markdown(
+    "<center>🚀 Final Year AI Project - Production Ready</center>",
+    unsafe_allow_html=True
+)
