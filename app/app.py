@@ -66,7 +66,7 @@ if not os.path.exists(model_path):
 
 model = pickle.load(open(model_path, "rb"))
 # ---------------- LOAD DATASET ----------------
-data_path = os.path.join(BASE_DIR, "..", "train.csv")
+data_path = os.path.join(os.path.dirname(BASE_DIR), "train.csv")
 
 df = pd.read_csv(data_path)
 # ---------------- LOAD DATA ----------------
